@@ -5,7 +5,7 @@ use skulpin::skia_safe::{TextBlob, Font as SkiaFont, Typeface, TextBlobBuilder, 
 use font_kit::{source::SystemSource, metrics::Metrics, properties::{Properties, Weight, Style, Stretch}, family_name::FamilyName, font::Font, };
 use skribo::{LayoutSession, FontRef as SkriboFont, FontFamily, FontCollection, TextStyle};
 
-use log::trace;
+use log::{trace, debug, error};
 
 const STANDARD_CHARACTER_STRING: &str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
 
@@ -58,6 +58,7 @@ struct FontSet {
 fn build_collection_by_font_name(font_name: Option<&str>, bold: bool, italic: bool) -> FontCollection {
     let source = SystemSource::new();
 
+    println!("Building collection for {:?} with bold = {} and italic = {}",&font_name,&bold,&italic);
     let mut collection = FontCollection::new();
 
     if let Some(font_name) = font_name {
@@ -94,6 +95,28 @@ fn build_collection_by_font_name(font_name: Option<&str>, bold: bool, italic: bo
     if let Ok(emoji) = source.select_family_by_name(SYSTEM_EMOJI_FONT) {
         let font = emoji.fonts()[0].load().unwrap();
         collection.add_family(FontFamily::new_from_font(font));
+    }
+
+    debug!("Selecting font family by name: {}",SYSTEM_SYMBOL_FONT);
+    match source.select_family_by_name(SYSTEM_SYMBOL_FONT) {
+        Ok(sys_symbol) => {
+            let fonts = sys_symbol.fonts();
+            debug!("system_symbol_font count = {}",fonts.len());
+            for font in fonts.iter() {
+                let data = match font.load() {
+                    Ok(f) => f,
+                    Err(e) => {
+                        error!("Failed to load symbol font: {:?}",e);
+                        continue;
+                    }
+                };
+                debug!("... adding family");
+                collection.add_family(FontFamily::new_from_font(data));
+            }
+        },
+        Err(e) => {
+            error!("Failed to load system symbol font: {:?}",e);
+        }
     }
 
     if let Ok(sys_symbol) = source.select_family_by_name(SYSTEM_SYMBOL_FONT) {

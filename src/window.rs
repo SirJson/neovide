@@ -239,7 +239,7 @@ impl WindowWrapper {
             }
         }
 
-        debug!("Render Triggered");
+        trace!("Render Triggered");
         let current_size = self.previous_size;
         if REDRAW_SCHEDULER.should_draw() || SETTINGS.get::<WindowSettings>().no_idle {
             let renderer = &mut self.renderer;
