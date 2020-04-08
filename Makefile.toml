@@ -1,0 +1,24 @@
+[tasks.clean]
+command = "cargo"
+args = ["clean"]
+
+[tasks.build]
+command = "cargo"
+args = ["build", "--all-features"]
+dependencies = ["clean"]
+
+[tasks.build-release]
+command = "cargo"
+args = ["build", "--release", "--all-features"]
+dependencies = ["clean"]
+
+[tasks.install-local.linux]
+script_runner = "@shell"
+script = [
+'''
+cp -vf "${CARGO_MAKE_WORKING_DIRECTORY}/target/release/${CARGO_MAKE_CRATE_NAME}" "${HOME}/.local/bin/${CARGO_MAKE_CRATE_NAME}"
+chmod +x "${HOME}/.local/bin/${CARGO_MAKE_CRATE_NAME}"
+echo ">> Installed '${CARGO_MAKE_CRATE_NAME}' to '${HOME}/.local/bin'. Make sure '${HOME}/.local/bin' is in your PATH"
+'''
+]
+dependencies = ['build-release']
